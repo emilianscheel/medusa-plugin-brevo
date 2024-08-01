@@ -1,6 +1,9 @@
 # Medusa Plugin Brevo
 
 
+1. Create an account at [Brevo](https://www.brevo.co/)
+2. Create a new template and get the template id
+
 ### 1. Install
 
 ```bash

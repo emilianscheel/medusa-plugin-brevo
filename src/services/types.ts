@@ -45,7 +45,7 @@ export type BrevoServiceOptions = {
 
         /**
          * ## `email`
-         * Either automatically send to the user's email or specify an email adress manually.
+         * Either automatically (use 'auto') send to the user's email or specify an email adress manually (use 'info@example.com').
          */
         email: "auto" | string;
 
