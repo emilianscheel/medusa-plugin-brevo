@@ -24,7 +24,6 @@ import {
     ReturnItem,
 } from "@medusajs/medusa";
 import { humanizeAmount, zeroDecimalCurrencies } from "medusa-core-utils";
-import { IsNull, Not } from "typeorm";
 import { BrevoServiceOptions, SendOptions } from "./types";
 import { FulfillmentService } from "@medusajs/medusa/dist/services";
 
