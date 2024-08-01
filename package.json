@@ -1,11 +1,11 @@
 {
     "name": "medusa-plugin-brevo",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "description": "Brevo notification provider for Medusa",
     "main": "dist/index.js",
     "repository": {
         "type": "git",
-        "url": "https://github.com/emilianscheel/medusa-plugin-brevo"
+        "url": "git+https://github.com/emilianscheel/medusa-plugin-brevo.git"
     },
     "files": [
         "dist"
@@ -20,6 +20,7 @@
         "test": "jest --passWithNoTests src",
         "test:integration": "jest --forceExit -- integration-tests/**/__tests__/**/*.spec.ts",
         "build": "rimraf dist && tsc -p ./tsconfig.json",
+        "prepare": "cross-env NODE_ENV=production npm run build",
         "watch": "tsc --watch"
     },
     "devDependencies": {
@@ -34,7 +35,9 @@
     "dependencies": {
         "@getbrevo/brevo": "^2.2.0",
         "@medusajs/medusa": "^1.20.9",
-        "@medusajs/utils": "^1.11.7"
+        "@medusajs/utils": "^1.11.7",
+        "medusa-core-utils": "^1.2.3",
+        "typeorm": "^0.3.20"
     },
     "keywords": [
         "medusa-plugin",

@@ -1,5 +1,5 @@
 import { ModuleProviderExports } from "@medusajs/types";
-import { BrevoNotificationService } from "./services/brevo";
+import BrevoNotificationService from "./services/brevo";
 
 const services = [BrevoNotificationService];
 
@@ -8,3 +8,5 @@ const providerExport: ModuleProviderExports = {
 };
 
 export default providerExport;
+
+export * from "./types";
