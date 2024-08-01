@@ -10,3 +10,4 @@ const providerExport: ModuleProviderExports = {
 export default providerExport;
 
 export * from "./types";
+export * from "./services/types";
