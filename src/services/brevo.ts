@@ -24,8 +24,8 @@ import {
     ReturnItem,
 } from "@medusajs/medusa";
 import { humanizeAmount, zeroDecimalCurrencies } from "medusa-core-utils";
-import { BrevoServiceOptions, SendOptions } from "./types";
 import { FulfillmentService } from "@medusajs/medusa/dist/services";
+import { BrevoServiceOptions, SendOptions } from "./types";
 
 export default class BrevoNotificationService extends AbstractNotificationService {
     static identifier = "brevo";
