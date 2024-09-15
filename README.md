@@ -1,5 +1,6 @@
 # Medusa Plugin Brevo
 
+This plugin is under development and is not yet ready for production use.
 
 1. Create an account at [Brevo](https://www.brevo.co/)
 2. Create a new template and get the template id
