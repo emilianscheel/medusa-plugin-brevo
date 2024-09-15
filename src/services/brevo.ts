@@ -4,7 +4,6 @@ import {
     TransactionalEmailsApiApiKeys,
 } from "@getbrevo/brevo";
 import {
-    AbstractNotificationService,
     CartService,
     ClaimService,
     Discount,
@@ -13,21 +12,22 @@ import {
     LineItem,
     LineItemService,
     Logger,
+    Order,
     OrderService,
     ProductVariantService,
+    ReturnItem,
     ReturnService,
     StoreService,
     SwapService,
     TotalsService,
     UserService,
-    Order,
-    ReturnItem,
 } from "@medusajs/medusa";
-import { humanizeAmount, zeroDecimalCurrencies } from "medusa-core-utils";
 import { FulfillmentService } from "@medusajs/medusa/dist/services";
+import { humanizeAmount, zeroDecimalCurrencies } from "medusa-core-utils";
+import { NotificationService } from "medusa-interfaces";
 import { BrevoServiceOptions, SendOptions } from "./types";
 
-export default class BrevoNotificationService extends AbstractNotificationService {
+class BrevoNotificationService extends NotificationService {
     static identifier = "brevo";
     protected config_: BrevoServiceOptions;
     protected brevo_: TransactionalEmailsApi;
@@ -48,6 +48,8 @@ export default class BrevoNotificationService extends AbstractNotificationServic
     protected giftCardService_: GiftCardService;
     protected userService_: UserService;
 
+    protected readonly notificationDataService_: any;
+
     constructor(
         container: {
             fulfillmentProviderService: FulfillmentProviderService;
@@ -64,6 +66,7 @@ export default class BrevoNotificationService extends AbstractNotificationServic
             giftCardService: GiftCardService;
             userService: UserService;
             logger: Logger;
+            notificationDataService: any;
         },
         options: BrevoServiceOptions,
     ) {
@@ -83,7 +86,9 @@ export default class BrevoNotificationService extends AbstractNotificationServic
         this.giftCardService_ = container.giftCardService;
         this.userService_ = container.userService;
 
-        this.config_ = options;
+        this.notificationDataService_ = container.notificationDataService;
+
+        this.config_ = { ...options };
         this.logger_ = container.logger;
 
         this.brevo_ = new TransactionalEmailsApi();
@@ -96,7 +101,7 @@ export default class BrevoNotificationService extends AbstractNotificationServic
 
     async sendEmail(options: SendOptions) {
         let smtpEmail = new SendSmtpEmail();
-        smtpEmail.templateId = options.templateId;
+        smtpEmail.templateId = options.template_id;
 
         smtpEmail.sender = {
             name: options.from_name,
@@ -132,8 +137,13 @@ export default class BrevoNotificationService extends AbstractNotificationServic
         status: string;
         data: Record<string, unknown>;
     }> {
-        const eventConfig = this.config_.events.find(
+        const eventConfig = this.config_.events?.find(
             (item) => item.event === event,
+        );
+
+        this.logger_.log(
+            `Brevo registred events: ${event} ${JSON.stringify(eventConfig)} ${JSON.stringify(this.config_.events)}`,
+            this.config_.events,
         );
 
         if (!eventConfig) {
@@ -148,14 +158,28 @@ export default class BrevoNotificationService extends AbstractNotificationServic
             };
         }
 
-        const populatedData = await this.populateData(
+        this.logger_.log(
+            `Going to populate data ... ${JSON.stringify(data)} ${data}`,
+        );
+
+        /*const populatedData = await this.populateData(
+            event,
+            data,
+            attachmentGenerator,
+        );*/
+
+        const populatedData = await this.notificationDataService_.fetchData(
             event,
             data,
             attachmentGenerator,
         );
 
+        this.logger_.log(
+            `Brevo populated data: ${event} ${JSON.stringify(populatedData)}`,
+        );
+
         const sendOptions = {
-            templateId: eventConfig.templateId,
+            template_id: eventConfig.template_id,
             data: populatedData,
             from_email: this.config_.from.email,
             from_name: this.config_.from.name,
@@ -166,7 +190,7 @@ export default class BrevoNotificationService extends AbstractNotificationServic
                 this.config_.from.email,
         };
 
-        this.sendEmail(sendOptions);
+        await this.sendEmail(sendOptions);
 
         this.logger_.log(
             `Brevo Notification sent ${sendOptions.to_email}`,
@@ -194,7 +218,7 @@ export default class BrevoNotificationService extends AbstractNotificationServic
             to_email: config.to || notification.to,
         } as SendOptions;
 
-        this.sendEmail(sendOptions);
+        await this.sendEmail(sendOptions);
 
         this.logger_.log(
             `Brevo Notification resent ${sendOptions.to_email}`,
@@ -218,6 +242,8 @@ export default class BrevoNotificationService extends AbstractNotificationServic
         data: unknown,
         attachementGenerator: unknown,
     ) {
+        this.logger_.log(`Function 'populateData' called ...`);
+
         switch (event) {
             /* User */
             case "user.created":
@@ -227,75 +253,75 @@ export default class BrevoNotificationService extends AbstractNotificationServic
 
             /* Customer */
             case "customer.created":
-                return this.customerData(data);
+                return await this.customerData(data);
             case "customer.updated":
-                return this.customerData(data);
+                return await this.customerData(data);
             case "customer.password_reset":
                 return data;
             case "invite.created":
-                return this.inviteCreatedData(data);
+                return await this.inviteCreatedData(data);
 
             /* Product Restock */
             case "restock-notification.restocked":
-                return this.restockNotificationData(
+                return await this.restockNotificationData(
                     data as { emails: string[]; variant_id: string },
                 );
 
             /* Order */
             case "order.placed":
-                return this.orderData(data as { id: string });
+                return await this.orderData(data as { id: string });
             case "order.updated":
-                return this.orderData(data as { id: string });
+                return await this.orderData(data as { id: string });
             case "order.canceled":
-                return this.orderData(data as { id: string });
+                return await this.orderData(data as { id: string });
             case "order.completed":
-                return this.orderData(data as { id: string });
+                return await this.orderData(data as { id: string });
             case "order.orders_claimed":
-                return this.orderData(data as { id: string });
+                return await this.orderData(data as { id: string });
             case "order.refund_created":
-                return this.orderRefundCreatedData(
+                return await this.orderRefundCreatedData(
                     data as { id: string; refund_id: string },
                 );
 
             /* Order Payment */
             case "order.payment_captured":
-                return this.orderData(data as { id: string });
+                return await this.orderData(data as { id: string });
             case "order.payment_capture_failed":
-                return this.orderData(data as { id: string });
+                return await this.orderData(data as { id: string });
 
             /* Order Claim */
             case "claim.shipment_created":
-                return this.claimShipmentCreatedData(
+                return await this.claimShipmentCreatedData(
                     data as { id: string; fulfillment_id: string },
                 );
 
             /* Order Swap */
             case "swap.created":
-                return this.swapData(data as { id: string });
+                return await this.swapData(data as { id: string });
             case "swap.shipment_created":
-                return this.swapShipmentCreatedData(
+                return await this.swapShipmentCreatedData(
                     data as { id: string; fulfillment_id: string },
                 );
             case "swap.received":
-                return this.swapData(data as { id: string });
+                return await this.swapData(data as { id: string });
 
             /* Order Fulfillment */
             case "order.fulfillment_created":
-                return this.orderData(data as { id: string });
+                return await this.orderData(data as { id: string });
             case "order.fulfillment_canceled":
-                return this.orderData(data as { id: string });
+                return await this.orderData(data as { id: string });
 
             /* Order Shipment */
             case "order.shipment_created":
-                return this.orderShipmentCreatedData(
+                return await this.orderShipmentCreatedData(
                     data as { id: string; fulfillment_id: string },
                 );
 
             /* Gift Card */
             case "order.gift_card_created":
-                return this.giftCardCreatedData(data as { id: string });
+                return await this.giftCardCreatedData(data as { id: string });
             case "gift_card.created":
-                return this.giftCardCreatedData(data as { id: string });
+                return await this.giftCardCreatedData(data as { id: string });
 
             // See https://docs.medusajs.com/development/events/events-list
             // for a list of all events
@@ -366,8 +392,13 @@ export default class BrevoNotificationService extends AbstractNotificationServic
      */
 
     async orderData({ id }: { id: string }) {
+        this.logger_.log(`Function 'orderData' called ... order_id: ${id}`);
+
         const order = await this.orderService_.retrieve(id, {
             select: [
+                "discounts",
+                "gift_cards",
+                "items",
                 "shipping_total",
                 "discount_total",
                 "tax_total",
@@ -377,6 +408,8 @@ export default class BrevoNotificationService extends AbstractNotificationServic
                 "total",
                 "customer_id",
                 "customer",
+                "currency_code",
+                "created_at",
             ],
             relations: [
                 "customer",
@@ -394,7 +427,11 @@ export default class BrevoNotificationService extends AbstractNotificationServic
             ],
         });
 
+        this.logger_.info(`Order retrieved: ${JSON.stringify(order)}`);
+
         const currencyCode = order.currency_code.toUpperCase();
+
+        this.logger_.info(`Currency code upper cased ${currencyCode}`);
 
         type PopulatedLineItem = LineItem & {
             totals: any;
@@ -405,25 +442,29 @@ export default class BrevoNotificationService extends AbstractNotificationServic
 
         let populatedItems: PopulatedLineItem[] = [];
 
-        for (const item of order.items) {
-            const totals = await this.totalsService_.getLineItemTotals(
-                item,
-                order,
-                {
-                    include_tax: true,
-                    use_tax_lines: true,
-                },
-            );
+        this.logger_.info(`Order data: ${JSON.stringify(order)}`);
 
-            const populatedItem = {
-                ...item,
-                totals: totals,
-                thumbnail: this.normalizeThumbUrl_(item.thumbnail ?? ""),
-                discounted_price: `${this.humanPrice_(totals.total / item.quantity, currencyCode)} ${currencyCode}`,
-                price: `${this.humanPrice_(totals.original_total / item.quantity, currencyCode)} ${currencyCode}`,
-            } as PopulatedLineItem;
+        if (order.items) {
+            for (const item of [...order.items]) {
+                const totals = await this.totalsService_.getLineItemTotals(
+                    item,
+                    order,
+                    {
+                        include_tax: true,
+                        use_tax_lines: true,
+                    },
+                );
 
-            populatedItems.push(populatedItem);
+                const populatedItem = {
+                    ...item,
+                    totals: totals,
+                    thumbnail: this.normalizeThumbUrl_(item.thumbnail ?? ""),
+                    discounted_price: `${this.humanPrice_(totals.total / item.quantity, currencyCode)} ${currencyCode}`,
+                    price: `${this.humanPrice_(totals.original_total / item.quantity, currencyCode)} ${currencyCode}`,
+                } as PopulatedLineItem;
+
+                populatedItems.push(populatedItem);
+            }
         }
 
         type PopulatedDiscount = Discount & {
@@ -435,7 +476,7 @@ export default class BrevoNotificationService extends AbstractNotificationServic
         let discounts: PopulatedDiscount[] = [];
 
         if (order.discounts) {
-            for (const discount of order.discounts) {
+            for (const discount of [...order.discounts]) {
                 const populatedDiscount = {
                     ...discount,
                     is_giftcard: false,
@@ -449,7 +490,7 @@ export default class BrevoNotificationService extends AbstractNotificationServic
 
         let giftCards: PopulatedDiscount[] = [];
         if (order.gift_cards) {
-            for (const giftCard of order.gift_cards) {
+            for (const giftCard of [...order.gift_cards]) {
                 const populatedGiftCard = {
                     is_giftcard: true,
                     code: giftCard.code,
@@ -548,6 +589,9 @@ export default class BrevoNotificationService extends AbstractNotificationServic
     async orderShipmentCreatedData({ id, fulfillment_id }) {
         const order = await this.orderService_.retrieve(id, {
             select: [
+                "items",
+                "discounts",
+                "gift_cards",
                 "shipping_total",
                 "discount_total",
                 "tax_total",
@@ -556,6 +600,7 @@ export default class BrevoNotificationService extends AbstractNotificationServic
                 "subtotal",
                 "total",
                 "refundable_amount",
+                "cart_id",
             ],
             relations: [
                 "customer",
@@ -600,7 +645,7 @@ export default class BrevoNotificationService extends AbstractNotificationServic
 
     async orderRefundCreatedData({ id, refund_id }) {
         const order = await this.orderService_.retrieveWithTotals(id, {
-            relations: ["refunds", "items"],
+            relations: ["refunds", "items", "card_id"],
         });
 
         const refund = order.refunds.find((refund) => refund.id === refund_id);
@@ -675,7 +720,7 @@ export default class BrevoNotificationService extends AbstractNotificationServic
             "";
 
         const order = await this.orderService_.retrieve(swap.order_id, {
-            select: ["total"],
+            select: ["total", "currency_code", "cart_id"],
             relations: [
                 "items.variant.product.profiles",
                 "items.tax_lines",
@@ -748,13 +793,13 @@ export default class BrevoNotificationService extends AbstractNotificationServic
         const locale = await this.extractLocale(order);
 
         return {
+            email: order.email,
             locale,
             swap,
-            order,
+            order: order,
             return_request: returnRequest,
             date: swap.updated_at.toDateString(),
             swap_link: swapLink,
-            email: order.email,
             items: decoratedItems.filter((di) => !di.is_return),
             return_items: decoratedItems.filter((di) => di.is_return),
             return_total: `${this.humanPrice_(
@@ -994,3 +1039,5 @@ export default class BrevoNotificationService extends AbstractNotificationServic
         };
     }
 }
+
+export default BrevoNotificationService;

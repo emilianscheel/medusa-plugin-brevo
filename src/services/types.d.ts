@@ -1,7 +1,7 @@
 import { BrevoSupportedEvents } from "../types";
 
 export type SendOptions = {
-    templateId: number;
+    template_id: number;
     to_email: string;
     from_email: string;
     from_name: string;
@@ -38,10 +38,10 @@ export type BrevoServiceOptions = {
     events: {
         event: BrevoSupportedEvents;
         /**
-         * ## `templateId`
+         * ## `template_id`
          * Brevo Template Id
          */
-        templateId: number;
+        template_id: number;
 
         /**
          * ## `email`

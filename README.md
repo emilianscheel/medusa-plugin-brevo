@@ -34,6 +34,146 @@ module.exports = {
     }
   ]
 }
+
+{
+    resolve: `medusa-plugin-brevo`,
+    /** @type {import('medusa-plugin-brevo').BrevoServiceOptions} */
+    options: {
+        api_key: process.env.BREVO_API_KEY,
+        from: {
+            name: "La Place Store",
+            email: "info@la-place.store",
+        },
+        events: [
+            {
+                event: "user.created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "user.updated",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "customer.created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "customer.updated",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "customer.password_reset",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "invite.created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "estock-notification.restocked",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "user.created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "order.placed",
+                template_id: 21,
+                email: "auto",
+                copy_to: "test7@la-place.site",
+            },
+            {
+                event: "order.updated",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "order.canceled",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "order.completed",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "order.orders_claimed",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "order.refund_created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "order.payment_captured",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "order.payment_capture_failed",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "claim.shipment_created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "swap.created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "swap.received",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "swap.shipment_created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "order.fulfillment_created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "order.fulfillment_canceled",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "swap.shipment_created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "gift_card.created",
+                template_id: 21,
+                email: "auto",
+            },
+            {
+                event: "gift_card.created",
+                template_id: 21,
+                email: "auto",
+            },
+        ],
+    },
+},
 ```
 
 ### 3. Test
