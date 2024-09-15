@@ -1,6 +1,6 @@
 {
     "name": "medusa-plugin-brevo",
-    "version": "0.0.27",
+    "version": "0.0.28",
     "description": "Brevo notification provider for Medusa",
     "main": "dist/index.js",
     "repository": {
